@@ -39,7 +39,7 @@ const newData = {
 }
 
 console.log(`> Writing book ${newBookName} with alias ${newAlias}`)
-fs.writeFile(`../kjv-new/${bookName}.json`, JSON.stringify(newData, null, 2), (err) => {
+fs.writeFile(`../kjv-new/${newBookName}.json`, JSON.stringify(newData, null, 2), (err) => {
   if (err) {
     console.error(err)
     return
