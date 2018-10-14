@@ -1,4 +1,3 @@
-const fs = require('fs')
 const R = require('ramda')
 
 //
@@ -12,13 +11,11 @@ const verseLens = R.curry((chapter, verse) => R.lensPath(['content', chapter - 1
 // Functions
 //
 
-const loadBook = (bookName) => {
-  const path = `kjv-new/${bookName.toLowerCase()}.json`
-  const data = fs.readFileSync(path)
-  return JSON.parse(data)
-}
-
 const chapterLength = R.curry((book, chapter) => R.view(chapterLens(chapter), book).length)
+
+//
+// Exports
+//
 
 const getVerse = R.curry((book, chapter, verse) => ({
   book: book.book,
@@ -37,14 +34,8 @@ const getChapterVerses = R.curry((book, chapter, options) => R.map(
 
 const getWholeChapter = getChapterVerses(R.__, R.__, {})
 
-//
-// Exports
-//
-
-const lookup = (bookName, startChapter, startVerse, endChapter, endVerse) => {
-  const book = loadBook(bookName)
-
-  if (startChapter === endChapter) {
+const getPassage = (book, startChapter, startVerse, endChapter, endVerse) => {
+  if (!endChapter || startChapter === endChapter) {
     return getChapterVerses(
       book,
       startChapter,
@@ -76,4 +67,9 @@ const lookup = (bookName, startChapter, startVerse, endChapter, endVerse) => {
   ]
 }
 
-module.exports = lookup
+module.exports = {
+  getVerse,
+  getChapterVerses,
+  getWholeChapter,
+  getPassage,
+}
