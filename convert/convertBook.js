@@ -10,7 +10,7 @@ const convertVerse = (verse) => {
   if (keys.length !== 1) throw Error(`Found unexpected keys ${keys} for verse. Verse:\n\n${verse}`)
   const firstKey = keys[0]
   process.stdout.write('*')
-  return verse[firstKey]
+  return verse[firstKey].replace(/2019/g, `'`)
 }
 
 const convertChapter = (chapter) => {
