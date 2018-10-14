@@ -1,83 +1,79 @@
 const fs = require('fs')
+const R = require('ramda')
 
 //
 // Helpers
 //
 
-const range = (start, stop) => Array.from({ length: stop - start + 1 }, (_, i) => start + i)
+const chapterLens = chapter => R.lensPath(['content', chapter - 1])
+const verseLens = R.curry((chapter, verse) => R.lensPath(['content', chapter - 1, verse - 1]))
 
 //
 // Functions
 //
 
-const getBook = (bookName) => {
+const loadBook = (bookName) => {
   const path = `kjv-new/${bookName.toLowerCase()}.json`
   const data = fs.readFileSync(path)
   return JSON.parse(data)
 }
 
-const getChapter = (book, chapterRef) => ({
-  book: book.book,
-  chapterRef,
-  content: book.content[chapterRef - 1],
-})
+const chapterLength = R.curry((book, chapter) => R.view(chapterLens(chapter), book).length)
 
-const getVerse = chapter => verseRef => ({
-  book: chapter.book,
-  chapterRef: chapter.chapterRef,
-  verseRef,
-  content: chapter.content && chapter.content[verseRef - 1],
-})
+const getVerse = R.curry((book, chapter, verse) => ({
+  book: book.book,
+  chapter,
+  verse,
+  content: R.view(verseLens(chapter, verse), book),
+}))
+
+const getChapterVerses = R.curry((book, chapter, options) => R.map(
+  getVerse(book, chapter),
+  R.range(
+    options.startVerse || 1,
+    (options.endVerse || chapterLength(book, chapter)) + 1,
+  ),
+))
+
+const getWholeChapter = getChapterVerses(R.__, R.__, {})
 
 //
 // Exports
 //
 
-const getPassage = (bookName, startRef, endRef) => {
-  const book = getBook(bookName)
-  let verses
+const lookup = (bookName, startChapter, startVerse, endChapter, endVerse) => {
+  const book = loadBook(bookName)
 
-  if (startRef.chapter === endRef.chapter) { // Genesis 1:1 - 1:10
-    const chapter = getChapter(book, startRef.chapter)
-    verses = range(startRef.verse, endRef.verse)
-      .map(getVerse(chapter))
-  } else {
-    // Example: Genesis 1:1 - 2:10
-    const startChapter = getChapter(book, startRef.chapter)
-    const startChapterVerses = range(startRef.verse, startChapter.content.length)
-      .map(getVerse(startChapter))
-    const endChapter = getChapter(book, endRef.chapter)
-    const endChapterVerses = range(1, endRef.verse)
-      .map(getVerse(endChapter))
-
-    if (endRef.chapter - startRef.chapter > 1) {
-      // Example: Genesis 1:10 - 4:10
-      // This is tricky: We need a portion of chapter 1, a portion of chapter
-      // 4 (see the above code), but we also need all of chapter 2 and chapter
-      // 3.
-      const inBetweenRange = range(startRef.chapter + 1, endRef.chapter - 1)
-      const inBetweeners = inBetweenRange.reduce((verses, chapterRef) => {
-        const chapter = getChapter(book, chapterRef)
-        return [
-          ...verses,
-          ...range(1, chapter.content.length).map(getVerse(chapter)),
-        ]
-      }, [])
-
-      verses = [
-        ...startChapterVerses,
-        ...inBetweeners,
-        ...endChapterVerses,
-      ]
-    } else {
-      verses = [
-        ...startChapterVerses,
-        ...endChapterVerses,
-      ]
-    }
+  if (startChapter === endChapter) {
+    return getChapterVerses(
+      book,
+      startChapter,
+      { startVerse: startVerse, endVerse: endVerse },
+    )
   }
 
-  return verses
+  const startRefVerses = getChapterVerses(
+    book,
+    startChapter,
+    { startVerse: startVerse },
+  )
+
+  const middleVerses = R.flatten(R.map(
+    getWholeChapter(book),
+    R.range(startChapter + 1, endChapter),
+  ))
+
+  const endRefVerses = getChapterVerses(
+    book,
+    endChapter,
+    { endVerse: endVerse },
+  )
+
+  return [
+    ...startRefVerses,
+    ...middleVerses,
+    ...endRefVerses,
+  ]
 }
 
-module.exports = getPassage
+module.exports = lookup

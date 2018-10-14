@@ -1,55 +1,50 @@
-const getPassage = require('./server')
+const lookup = require('./server')
+const R = require('ramda')
 
 //
 // Functions
 //
 
 const parseLine = (line) => {
-  const matcher = /(\d*\D+)(\d+:\d+)-?(\d*:?\d*$)/ // ...just trust me. I'm sorry
+  const matcher = /(\d?\D+)(\d+):?(\d*)-?(\d*):?(\d*)$/ // ...just trust me. I'm sorry
   const formattedLine = line.toLowerCase().replace(/\s/g, '') // no caps or whitespace
   const result = matcher.exec(formattedLine)
 
-  if (!result) {
-    console.log(`Sorry, didn't get that.`)
+  if (!result) return null
+
+  const [_, bookName, ...numberStrings] = result
+  const numbers = numberStrings.map(s => parseInt(s, 10))
+
+  const isSingleVerse = numbers[0] && numbers[1] && !numbers[2] && !numbers[3]
+  const isSingleChapter = numbers[0] && !numbers[1] && !numbers[2] && !numbers[3]
+  const isChapterToChapter = numbers[0] && !numbers[1] && numbers[2] && !numbers[3]
+  const isChapterVerseToVerse = numbers[0] && numbers[1] && numbers[2] && !numbers[3]
+  const isChapterVerseToChapterVerse = numbers[0] && numbers[1] && numbers[2] && numbers[3]
+
+  if (!isSingleVerse &&
+    !isSingleChapter &&
+    !isChapterToChapter &&
+    !isChapterVerseToVerse &&
+    !isChapterVerseToChapterVerse) {
     return null
   }
 
-  const [_, bookName, rawStartRef, rawEndRef] = result
-  const [startChapter, startVerse] = rawStartRef.split(/:/)
+  const [startChapter, startVerse] = numbers
+  const endChapter = (isSingleVerse || isSingleChapter || isChapterVerseToVerse)
+    ? startChapter
+    : numbers[2]
 
-  let endChapter
   let endVerse
+  if (isSingleVerse) endVerse = startVerse
+  if (isSingleChapter || isChapterToChapter) endVerse = null
+  if (isChapterVerseToVerse) endVerse = numbers[2]
+  if (isChapterVerseToChapterVerse) endVerse = numbers[3]
 
-  if (rawEndRef === '') { // Genesis 1:1
-    endChapter = startChapter
-    endVerse = startVerse
-  } else {
-    const splitEndRef = rawEndRef.split(/:/)
-
-    if (splitEndRef.length === 1) { // Genesis 1:1-5
-      endChapter = startChapter
-      endVerse = splitEndRef[0]
-    } else { // Genesis 1:1 - 2:10
-      endChapter = splitEndRef[0]
-      endVerse = splitEndRef[1]
-    }
-  }
-
-  return {
-    bookName,
-    startRef: {
-      chapter: parseInt(startChapter, 10),
-      verse: parseInt(startVerse, 10),
-    },
-    endRef: {
-      chapter: parseInt(endChapter, 10),
-      verse: parseInt(endVerse, 10),
-    },
-  }
+  return { bookName, startChapter, startVerse, endChapter, endVerse }
 }
 
 const formatPassage = serverData => serverData
-  .map(({ chapterRef, verseRef, content }) => `[${chapterRef}:${verseRef}] ${content}`)
+  .map(({ chapter, verse, content }) => `${verse === 1 ? '\n\n' : ''}[${chapter}:${verse}] ${content}`)
   .join(' ')
 
 //
@@ -66,12 +61,16 @@ readline.prompt()
 
 readline.on('line', (line) => {
   const lineData = parseLine(line)
+
   if (lineData) {
-    const { bookName, startRef, endRef } = lineData
-    const serverData = getPassage(bookName, startRef, endRef)
+    const { bookName, startChapter, startVerse, endChapter, endVerse } = lineData
+    const serverData = lookup(bookName, startChapter, startVerse, endChapter, endVerse)
     const formattedData = formatPassage(serverData)
 
     console.log(formattedData)
+    console.log('\n')
+  } else {
+    console.log(`Sorry, didn't get that`)
   }
 
   readline.prompt()

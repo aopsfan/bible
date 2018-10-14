@@ -1,0 +1,24 @@
+{
+  "name": "bible",
+  "version": "1.0.0",
+  "description": "Clone the project and convert old data:",
+  "main": "app.js",
+  "dependencies": {
+    "ramda": "^0.25.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "test",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aopsfan/bible.git"
+  },
+  "author": "Bruce Ricketts",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aopsfan/bible/issues"
+  },
+  "homepage": "https://github.com/aopsfan/bible#readme"
+}
