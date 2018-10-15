@@ -1,6 +1,4 @@
-const { getPassageFromInput } = require('./src/client/client')
-const { formatWithBracketedReference } = require('./src/api/decorators')
-const R = require('ramda')
+const { parse } = require('./src/interface/parser')
 
 //
 // CLI Setup
@@ -15,17 +13,10 @@ const readline = require('readline').createInterface({
 readline.prompt()
 
 readline.on('line', (line) => {
-  const passage = getPassageFromInput(line)
+  const format = parse(line)
 
-  if (passage) {
-    const formattedData = R
-      .map(R.pipe(
-        formatWithBracketedReference,
-        R.prop('format'),
-      ), passage)
-      .join(' ')
-
-    console.log(formattedData)
+  if (format) {
+    console.log(format)
     console.log('\n')
   } else {
     console.log(`Sorry, didn't get that`)

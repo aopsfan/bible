@@ -1,3 +1,4 @@
+const refDecorators = require('../decorators/refDecorators')
 const R = require('ramda')
 
 //
@@ -34,7 +35,10 @@ const getChapterVerses = R.curry((book, chapter, options) => R.map(
 
 const getWholeChapter = getChapterVerses(R.__, R.__, {})
 
-const getPassage = (book, startChapter, startVerse, endChapter, endVerse) => {
+const getPassage = (ref) => {
+  const { book, startChapter, startVerse, endChapter, endVerse } = refDecorators
+    .withBook(ref)
+
   if (!endChapter || startChapter === endChapter) {
     return getChapterVerses(
       book,
@@ -67,9 +71,4 @@ const getPassage = (book, startChapter, startVerse, endChapter, endVerse) => {
   ]
 }
 
-module.exports = {
-  getVerse,
-  getChapterVerses,
-  getWholeChapter,
-  getPassage,
-}
+module.exports = { getPassage }

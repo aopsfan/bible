@@ -1,14 +1,9 @@
-const { loadBook } = require('../server/server')
-const { getPassage } = require('../api/passages')
-
-const getPassageFromInput = (input) => {
-  const matcher = /(\d?\D+)(\d+):?(\d*)-?(\d*):?(\d*)$/ // ...just trust me. I'm sorry
-  const formattedLine = input.toLowerCase().replace(/\s/g, '') // no caps or whitespace
-  const result = matcher.exec(formattedLine)
-
+const getRef = (bookName, references) => {
+  const matcher = /(\d+):?(\d*)-?(\d*):?(\d*)$/ // ...just trust me. I'm sorry
+  const result = matcher.exec(references)
   if (!result) return null
 
-  const [_, bookName, ...numberStrings] = result
+  const [_, ...numberStrings] = result
   const numbers = numberStrings.map(s => parseInt(s, 10))
 
   const isSingleVerse = numbers[0] && numbers[1] && !numbers[2] && !numbers[3]
@@ -36,13 +31,13 @@ const getPassageFromInput = (input) => {
   if (isChapterVerseToVerse) endVerse = numbers[2]
   if (isChapterVerseToChapterVerse) endVerse = numbers[3]
 
-  return getPassage(
-    loadBook(bookName),
+  return {
+    bookName,
     startChapter,
     startVerse,
     endChapter,
     endVerse,
-  )
+  }
 }
 
-module.exports = { getPassageFromInput }
+module.exports = { getRef }

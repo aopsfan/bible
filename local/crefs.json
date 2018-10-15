@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "bookName": "revelation",
+    "startChapter": 4,
+    "startVerse": 1,
+    "endChapter": 4,
+    "endVerse": 8,
+    "id": 1,
+    "refId": 2
+  },
+  {
+    "bookName": "ezekiel",
+    "startChapter": 1,
+    "startVerse": 4,
+    "endChapter": 1,
+    "endVerse": 28,
+    "id": 2,
+    "refId": 1
+  }
+]
