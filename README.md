@@ -1,8 +1,9 @@
 ### Setup
 
-Clone the project and convert old data:
+Clone the project, install dependencies, and convert old data:
 
     git clone https://github.com/aopsfan/bible.git
+    npm install
     cd bible/convert
     ./convertKJV.sh
     cd ..
