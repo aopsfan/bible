@@ -1,26 +1,40 @@
-const { parse } = require('./src/interface/parser')
+const readline = require('readline')
+const R = require('ramda')
+const refs = require('./src/helpers/refs')
+const passages = require('./src/helpers/passages')
+
+//
+// Helpers
+//
+
+const readPassage = R.pipe(
+  refs.make,
+  passages.make,
+  passages.addFormat,
+  R.prop('format'),
+  console.log,
+)
+
+const commandsMap = {
+  read: readPassage,
+}
 
 //
 // CLI Setup
 //
 
-const readline = require('readline').createInterface({
+const cli = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
   prompt: '+> ',
 })
 
-readline.prompt()
+cli.prompt()
 
-readline.on('line', (line) => {
-  const format = parse(line)
+cli.on('line', (line) => {
+  const [cmd, ...args] = line.split(' ')
+  const commandFn = commandsMap[cmd]
 
-  if (format) {
-    console.log(format)
-    console.log('\n')
-  } else {
-    console.log(`Sorry, didn't get that`)
-  }
-
-  readline.prompt()
+  commandFn(args)
+  cli.prompt()
 }).on('close', () => console.log('\nGoodbye'))
