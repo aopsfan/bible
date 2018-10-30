@@ -11,4 +11,4 @@ Now, run the app:
 
     node app.js
 
-In the CLI, you can lookup passages with syntax like `John 1:1`, `John 3:16-20`, or `Psalms 1:1-3:8`.
+In the CLI, you can lookup passages with syntax like `read John.1:1`, `read John.3:16-20`, or `read Psalms.1:1-3:8`.
